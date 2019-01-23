@@ -1,0 +1,79 @@
+Option Explicit
+
+Dim Intervalt As Single 'min
+Dim Totalt As Single 'hr
+Dim MinWavelength As Single
+Dim MaxWavelength As Single
+
+Sub Main
+
+Intervalt = 10.0
+Totalt = 4.0
+MinWavelength = 350.0
+MaxWavelength = 800.0
+
+InstruInit
+GraphInit
+
+GotoTempAndWait(28,0)
+GoToCellAcc(4)
+DoBaseline
+
+Dim i As Integer
+Dim j As Integer
+
+For i=1 To Totalt*60/Intervalt
+	For j=1 To 3
+		GoToCellAcc(j)
+		DrawGraphs(i,j)
+	Next
+	Wait(Intervalt*60)
+Next
+
+SaveAs("C:\EKG\Lexi\Etch.bsw",5)
+
+End Sub
+
+
+Sub InstruInit
+
+'instrument parameters
+  StopAcc
+  SetVal("Beam Mode", BEAM_MODE_DOUBLE_FIXED_SLIT)
+  SetVal("X Mode", WAVELENGTH_XMODE)
+  SetVal("Scan start", MaxWavelength)
+  SetVal("Scan stop", MinWavelength)
+  SetVal("Y Mode", ABS_YMODE)
+  SetVal("Y min", 0.0)
+  SetVal("Y Max", 2.0)
+  'SetVal("UVVIS Slit Width", 1.0)
+  SetVal("UVVis SAT", 0.1)
+  SetVal("UVVis Interval" ,-1)
+  SetVal("UVVis Scan Rate", 600)
+
+End Sub
+
+
+Sub GraphInit
+
+Dim graphname As String
+
+graphname =  "Etch"
+NewGraph(graphname)
+GraphClear(graphname)
+Clearsymbols(graphname)
+ClearLines(graphname)
+    
+End Sub
+
+
+Function DrawGraphs(i As Integer, j As Integer)
+
+Dim curvename As String
+Dim graphname As String
+
+graphname = "Etch"
+curvename = "time=" + CStr((i-1)*Intervalt) + "min_" + "slot=" + CStr(j)
+ScanAndGraph(curvename, graphname)
+
+End Function
