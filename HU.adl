@@ -1,0 +1,108 @@
+Option Explicit
+
+Dim Intervaltime As Single 'min
+Dim StartT As Single
+Dim EndT As Single
+Dim StepT As Single
+Dim Cycle As Integer
+Dim Totalt As Single 'min
+Dim MinWavelength As Single
+Dim MaxWavelength As Single
+
+
+Sub Main
+
+StartT = 10
+EndT = 61
+StepT = 3
+Intervaltime = 30
+Cycle = 1
+MinWavelength = 400.0
+MaxWavelength = 800.0
+
+
+TotalT = EndT - StartT
+InstruInit
+GraphInit
+
+'GotoTempAndWait(40,0)
+
+Dim i As Integer
+Dim j As Integer
+
+AddStatusEntry("Current Block Temp")
+MonitorAcc(-1,-1,-1,16,10)
+
+GoToCellAcc(1)
+'ZeroInst
+DoBaseline
+Alarm
+Wait(120)
+
+For i=1 To Cycle
+	For j=1 To TotalT/StepT
+		GotoTempAndWait(StartT + (j - 1) * StepT,0)
+		Wait(Intervaltime * 60)
+		'SetTemperature(StartT + (j - 1) * StepT)
+		'WaitForHoldTime(Intervaltime)
+		DrawGraphs(i,StartT+(j-1)*StepT)
+		Alarm
+	Next
+	For j=1 To TotalT/StepT
+		GotoTempAndWait(EndT - (j - 1) * StepT,0)
+		Wait(Intervaltime * 60)
+		DrawGraphs(-i,EndT-(j-1)*StepT)
+		Alarm
+	Next
+Next
+
+SaveFileDirect("C:\EKG\Hu\1.bsw",5,True)
+GotoTempAndWait(25,0)
+
+
+End Sub
+
+
+Sub InstruInit
+
+'instrument parameters
+  StopAcc
+  SetVal("Beam Mode", BEAM_MODE_DOUBLE_FIXED_SLIT)
+  SetVal("X Mode", WAVELENGTH_XMODE)
+  SetVal("Scan start", MaxWavelength)
+  SetVal("Scan stop", MinWavelength)
+  SetVal("Y Mode", Abs_YMode)
+  SetVal("Y min", -0.1)
+  SetVal("Y Max", 2.0)
+  'SetVal("UVVIS Slit Width", 1.0)
+  SetVal("UVVis SAT", 0.1)
+  SetVal("UVVis Interval" ,-1)
+  SetVal("UVVis Scan Rate", 600)
+  SetVal("Source changeover", 300)
+
+End Sub
+
+
+Sub GraphInit
+
+Dim graphname As String
+
+graphname =  "Hu"
+NewGraph(graphname)
+GraphClear(graphname)
+Clearsymbols(graphname)
+ClearLines(graphname)
+    
+End Sub
+
+
+Function DrawGraphs(i As Integer,j As Integer)
+
+Dim curvename As String
+Dim graphname As String
+
+graphname = "change with time"
+curvename = "cycle=" + CStr(i) + "T=" + CStr(j)
+ScanAndGraph(curvename, graphname)
+
+End Function
